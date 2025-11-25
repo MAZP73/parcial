@@ -16,21 +16,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required by SonarCloud
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x' # Cambia si usas otra versión
+          dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore ./src/BadCleanArch.sln
+      - name: Restore
+        run: dotnet restore ./BadCleanArch.sln
 
       - name: Build
-        run: dotnet build ./src/BadCleanArch.sln --no-restore --configuration Release
+        run: dotnet build ./BadCleanArch.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test ./src/BadCleanArch.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
+        run: dotnet test ./BadCleanArch.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
 
       - name: SonarCloud Scan
         env:
