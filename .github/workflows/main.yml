@@ -2,7 +2,7 @@ name: SonarQube
 
 on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
     types: [opened, synchronize, reopened]
@@ -22,18 +22,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 📌 Descargar SDK 8 Portable (no se instala, solo se usa localmente)
-      - name: Download portable .NET 8 SDK
-        shell: pwsh
-        run: |
-          Invoke-WebRequest https://download.visualstudio.microsoft.com/download/pr/671cf97d-fb33-4f73-9e28-b1d845a70d82/8fd1b3a6464fdd6304a93afadfde4682/dotnet-sdk-8.0.100-win-x64.zip -OutFile dotnet8.zip
-          Expand-Archive dotnet8.zip -DestinationPath $Env:USERPROFILE\dotnet8
-
-      # 📌 Forzamos a que el dotnet portable quede primero en PATH
-      - name: Use portable dotnet 8
-        shell: pwsh
-        run: |
-          echo "PATH=$Env:USERPROFILE\dotnet8;$Env:PATH" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+      # 📌 Instalar .NET 9 (único SDK que vas a usar)
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.0.x"
 
       - name: Check dotnet version
         run: dotnet --info
@@ -44,7 +37,7 @@ jobs:
       - name: Build
         run: dotnet build BadCleanArch.sln --no-restore -c Release
 
-      - name: Test
+      - name: Test with coverage
         run: dotnet test BadCleanArch.sln --no-build -c Release --collect:"XPlat Code Coverage"
 
       - name: SonarQube Scan
@@ -53,9 +46,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            --define "sonar.projectKey=parcial"
-            --define "sonar.organization=mazp73"
-            --define "sonar.projectName=parcial"
-            --define "sonar.sources=src"
-            --define "sonar.host.url=https://sonarcloud.io"
-            --define "sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml"
+            --define sonar.projectKey=parcial
+            --define sonar.organization=mazp73
+            --define sonar.projectName=parcial
+            --define sonar.sources=src
+            --define sonar.host.url=https://sonarcloud.io
+            --define sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
