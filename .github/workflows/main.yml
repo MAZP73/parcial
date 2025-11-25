@@ -1,5 +1,4 @@
 name: SonarQube
-
 on:
   push:
     branches:
@@ -9,46 +8,39 @@ on:
 
 jobs:
   build:
-    name: Build and analyze
-    runs-on: windows-latest
-
-    defaults:
-      run:
-        working-directory: Parcial
+    name: Build and Analyze
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 📌 Instalar .NET 9 (único SDK que vas a usar)
-      - name: Setup .NET 9
-        uses: actions/setup-dotnet@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
-
-      - name: Check dotnet version
-        run: dotnet --info
+          dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore BadCleanArch.sln
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build BadCleanArch.sln --no-restore -c Release
+        run: dotnet build --no-incremental --configuration Release
 
       - name: Test with coverage
-        run: dotnet test BadCleanArch.sln --no-build -c Release --collect:"XPlat Code Coverage"
+        run: |
+          dotnet test --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Convert coverage to OpenCover
+        run: |
+          reportgenerator \
+            -reports:"TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"coveragereport" \
+            -reporttypes:opencover
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            --define sonar.projectKey=parcial
-            --define sonar.organization=mazp73
-            --define sonar.projectName=parcial
-            --define sonar.sources=src
-            --define sonar.host.url=https://sonarcloud.io
-            --define sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
