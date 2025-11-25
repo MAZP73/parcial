@@ -18,17 +18,25 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
 
-      - name: Verify .NET version
-        run: dotnet --version
+      # 🚨 FORZAR .NET 8 A TENER PRIORIDAD SOBRE .NET 9
+      - name: Force dotnet 8 to override system dotnet
+        shell: pwsh
+        run: |
+          Write-Host "DotNet root: $Env:DOTNET_ROOT"
+          $newPath = "$Env:DOTNET_ROOT;$Env:DOTNET_ROOT\tools;" + $Env:PATH
+          echo "PATH=$newPath" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Check SDK in use
+        run: dotnet --info
 
       - name: Restore
         run: dotnet restore BadCleanArch.sln
