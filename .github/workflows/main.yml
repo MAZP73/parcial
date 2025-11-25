@@ -12,26 +12,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout del código
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Instalar .NET
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
+      # Restaurar dependencias
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Parcial/BadCleanArch.sln
 
+      # Compilar
       - name: Build
-        run: dotnet build --no-incremental --configuration Release
+        run: dotnet build Parcial/BadCleanArch.sln --no-incremental --configuration Release
 
+      # Ejecutar tests con cobertura
       - name: Test with coverage
         run: |
-          dotnet test --collect:"XPlat Code Coverage" --results-directory TestResults
+          dotnet test Parcial/BadCleanArch.sln --collect:"XPlat Code Coverage" --results-directory TestResults
 
+      # Convertir cobertura a formato OpenCover
       - name: Convert coverage to OpenCover
         run: |
           reportgenerator \
@@ -39,6 +45,7 @@ jobs:
             -targetdir:"coveragereport" \
             -reporttypes:opencover
 
+      # Ejecutar análisis SonarQube
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
