@@ -21,18 +21,18 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x' # Cambia según tu versión
+          dotnet-version: '8.0.x' # Cambia si usas otra versión
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ./src/BadCleanArch.sln
 
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build ./src/BadCleanArch.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+        run: dotnet test ./src/BadCleanArch.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
 
-      - name: Run SonarCloud Scan
+      - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         uses: SonarSource/sonarcloud-github-action@v2
@@ -41,10 +41,6 @@ jobs:
             -Dsonar.organization=mazp73
             -Dsonar.projectKey=parcial
             -Dsonar.projectName=parcial
-            -Dsonar.sources=.
             -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.sources=src
             -Dsonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
-
-      - name: Publish Test Results (for coverage)
-        run: |
-          echo "Generating coverage files..."
