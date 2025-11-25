@@ -1,44 +1,44 @@
-name: SonarCloud Scan
+name: SonarCloud Analysis
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  analyze:
+  build:
+    name: Build and Analyze
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '7.0.x'
 
-      - name: Install SonarScanner for .NET
-        run: dotnet tool install --global dotnet-sonarscanner
-
-      - name: Begin SonarCloud analysis
-        run: |
-          dotnet-sonarscanner begin \
-            /k:"miguel-angel-zambrano-pena_parcial" \
-            /o:"miguel-angel-zambrano-pena" \
-            /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
-      - name: Build project
-        run: dotnet build --configuration Release
-
-      - name: End SonarCloud analysis
+      - name: Setup SonarCloud
+        uses: SonarSource/sonarcloud-github-action@v2.2.0
+        with:
+          organization: mazp73
+          projectKey: parcial
+          projectName: parcial
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          dotnet-sonarscanner end \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Begin SonarScanner
+        run: dotnet sonarscanner begin /k:"parcial" /o:"mazp73" /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Build project
+        run: dotnet build --no-restore --configuration Release
+
+      - name: End SonarScanner
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
