@@ -26,14 +26,9 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
-          include-prerelease: false
 
-      - name: Remove .NET 9 from PATH (fix restore issues)
-        shell: pwsh
-        run: |
-          $paths = $Env:PATH -split ';' | Where-Object { $_ -notmatch 'dotnet' -or $_ -match '8\.0' }
-          $Env:PATH = ($paths -join ';')
-          dotnet --info
+      - name: Verify .NET version
+        run: dotnet --version
 
       - name: Restore
         run: dotnet restore BadCleanArch.sln
