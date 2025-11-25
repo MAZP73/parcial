@@ -12,6 +12,10 @@ jobs:
     name: Build and Analyze
     runs-on: windows-latest
 
+    defaults:
+      run:
+        working-directory: Parcial   # ← CLAVE
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,19 +28,20 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore ./BadCleanArch.sln
+        run: dotnet restore BadCleanArch.sln
 
       - name: Build
-        run: dotnet build ./BadCleanArch.sln --no-restore --configuration Release
+        run: dotnet build BadCleanArch.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test ./BadCleanArch.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
+        run: dotnet test BadCleanArch.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
 
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         uses: SonarSource/sonarcloud-github-action@v2
         with:
+          projectBaseDir: Parcial
           args: >
             -Dsonar.organization=mazp73
             -Dsonar.projectKey=parcial
