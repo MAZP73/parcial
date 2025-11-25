@@ -2,7 +2,7 @@ name: SonarQube
 
 on:
   push:
-    branches:
+    branches: 
       - main
   pull_request:
     types: [opened, synchronize, reopened]
@@ -22,20 +22,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: "8.0.x"
-
-      # 🚨 FORZAR .NET 8 PARA QUE TENGA PRIORIDAD SOBRE .NET 9
-      - name: Force dotnet 8 to override system dotnet
+      # 📌 Descargar SDK 8 Portable (no se instala, solo se usa localmente)
+      - name: Download portable .NET 8 SDK
         shell: pwsh
         run: |
-          Write-Host "DotNet root: $Env:DOTNET_ROOT"
-          $newPath = "$Env:DOTNET_ROOT;$Env:DOTNET_ROOT\tools;" + $Env:PATH
-          echo "PATH=$newPath" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+          Invoke-WebRequest https://download.visualstudio.microsoft.com/download/pr/671cf97d-fb33-4f73-9e28-b1d845a70d82/8fd1b3a6464fdd6304a93afadfde4682/dotnet-sdk-8.0.100-win-x64.zip -OutFile dotnet8.zip
+          Expand-Archive dotnet8.zip -DestinationPath $Env:USERPROFILE\dotnet8
 
-      - name: Check SDK in use
+      # 📌 Forzamos a que el dotnet portable quede primero en PATH
+      - name: Use portable dotnet 8
+        shell: pwsh
+        run: |
+          echo "PATH=$Env:USERPROFILE\dotnet8;$Env:PATH" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Check dotnet version
         run: dotnet --info
 
       - name: Restore
