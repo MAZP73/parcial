@@ -1,4 +1,4 @@
-name: SonarCloud
+name: SonarQube
 
 on:
   push:
@@ -9,12 +9,12 @@ on:
 
 jobs:
   build:
-    name: Build and Analyze
+    name: Build and analyze
     runs-on: windows-latest
 
     defaults:
       run:
-        working-directory: Parcial   # ← CLAVE
+        working-directory: Parcial  # ← Tu proyecto está dentro de la carpeta "Parcial"
 
     steps:
       - name: Checkout repository
@@ -27,25 +27,37 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      # ---------------------------------------------
+      # Build WRAPPER (NO se usa en C#, pero lo dejaste en la plantilla)
+      # ---------------------------------------------
+
+      - name: Install Build Wrapper (not required for C#, but included as requested)
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
+
+      - name: Run Build Wrapper (C# does not need this, but left for template compatibility)
+        run: |
+          build-wrapper-win-x86-64.exe --out-dir build_wrapper_output_directory dotnet build BadCleanArch.sln -c Release
+      # ---------------------------------------------
+
       - name: Restore
         run: dotnet restore BadCleanArch.sln
 
       - name: Build
-        run: dotnet build BadCleanArch.sln --no-restore --configuration Release
+        run: dotnet build BadCleanArch.sln --no-restore -c Release
 
       - name: Test
-        run: dotnet test BadCleanArch.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
+        run: dotnet test BadCleanArch.sln --no-build -c Release --collect:"XPlat Code Coverage"
 
-      - name: SonarCloud Scan
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        uses: SonarSource/sonarcloud-github-action@v2
         with:
-          projectBaseDir: Parcial
           args: >
-            -Dsonar.organization=mazp73
-            -Dsonar.projectKey=parcial
-            -Dsonar.projectName=parcial
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.sources=src
-            -Dsonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
+            --define "sonar.projectKey=parcial"
+            --define "sonar.organization=mazp73"
+            --define "sonar.projectName=parcial"
+            --define "sonar.sources=src"
+            --define "sonar.host.url=https://sonarcloud.io"
+            --define "sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml"
+            --define "sonar.cfamily.compile-commands=build_wrapper_output_directory/compile_commands.json"
