@@ -18,16 +18,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: "8.0.x"
 
-      # 🚨 FORZAR .NET 8 A TENER PRIORIDAD SOBRE .NET 9
+      # 🚨 FORZAR .NET 8 PARA QUE TENGA PRIORIDAD SOBRE .NET 9
       - name: Force dotnet 8 to override system dotnet
         shell: pwsh
         run: |
